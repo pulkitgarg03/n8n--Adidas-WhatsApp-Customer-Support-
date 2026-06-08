@@ -1,0 +1,670 @@
+{
+  "name": "Adidas Customer Support",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "com.twilio.messaging.inbound-message.received"
+        ]
+      },
+      "type": "n8n-nodes-base.twilioTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2608,
+        -480
+      ],
+      "id": "75c64644-ed41-40fb-b0b5-c41cc8a6abc7",
+      "name": "Twilio Trigger",
+      "webhookId": "ac40bd0e-2bbd-4fec-80e4-0b1d51accf8e",
+      "credentials": {
+        "twilioApi": {
+          "id": "b87lxPKyna2wFffW",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "={{ $('Twilio Trigger').item.json.data.to }}",
+        "to": "={{ $('Twilio Trigger').item.json.data.from }}",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        -480
+      ],
+      "id": "bb9aa3fe-5282-40e7-af9e-c394c08b4e0c",
+      "name": "Send an SMS/MMS/WhatsApp message",
+      "credentials": {
+        "twilioApi": {
+          "id": "b87lxPKyna2wFffW",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User Query: {{ $('Twilio Trigger').item.json.data.body }}\n\nCurrent date/time:{{ $now }}\n ",
+        "options": {
+          "systemMessage": "You are an AI WhatsApp assistant for Adidas, a shoe store. You help customers with FAQs,\norder tracking, order creation, and product availability. For anything outside your scope, politely refer to the\nknowledge base or offer to escalate the query. You are friendly, helpful, concise, and sound like a professional human assistant.\nYou operate 24/7, but the business runs in the IST time zone.\n\nConversational Flow\nOnly when asked about you, respond with:\nHey! I’m Alex, your AI assistant from Adidas. Need help with an order, create an order, or have a quick question? I’ve got you covered—what can I assist you with today?\n\nOnly respond once at a time.\n\nLogics:\nGeneral Questions (e.g., return policy, shipping time, store hours, create order)\n→ Search the Knowledge Base.\n→ Always respond clearly and simply.\n→ Respond with cleaned output.\n→ Example:\nReturn Policy: {{ $json.Return_Policy }}\n\nFor getting product information,\nRun tool_call: Product_details.\nand get all the information about the product.\n\nOrder Tracking\n→ Ask for the order ID.\n→ Run tool_call: orders.\n→ Reply with Product name, delivery status, and expected arrival.\n→ If the order ID is invalid or not found, ask the user to double-check and re-enter.\n\nIf the user wants to create an order:\n->Ask Full Name\n-> Ask the product name which user wants to buy.\nTake price and details from the tool: Product_details\n->Run toll_call: Order_Creation.\n->Create a new order with the details provided by the user and get information from tool: Product_details.\n\n\nSpeak to Someone / Log a Query\n→ Ask for full name, issue\n→ Confirm: “Thanks! I’ve submitted this to our team. They’ll get back to you shortly.”\nSet Pulkit Garg as the default assignee always\n→ Run tool_call: Customer_Query.\n\nBehavioral Guidelines\n->Keep responses short, clear, and on-topic.\n->Sounds natural and professional.\n->Guide the conversation; ask polite follow-ups if vague.\n->Never mention tools or internal processes.\n->Don’t guess answers.\n->Always remember to answer only from the given data. \n->Do not hallucinate at any point in time.\n->Keep the chat history of the last 10 conversations to give a reply to the customer.\n->Don't start over with every answer as if the user wants to place an order, then ask their name, remember the name, then execute the next step. Do not start over after asking their names.\n->IMPORTANT: Before every response, always run remove_annotations() on the output.\n->Use plain text only — no markdown formatting.\n\nGoal: Ensure customers get fast, accurate, and helpful responses, leaving them satisfied and\nsupported.",
+          "returnIntermediateSteps": false,
+          "autoSaveHighlightedData": false,
+          "enableStreaming": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1912,
+        -480
+      ],
+      "id": "c5a3f0c6-8322-4ab8-8342-29eca6378a63",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -2160,
+        -256
+      ],
+      "id": "440f8e62-3a32-4ffa-bc9c-3b466aac103b",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "hQ6N2Jwu1H31Sqol",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appeiDRdblVPZEKXC",
+          "mode": "list",
+          "cachedResultName": "Adidas Customer Support",
+          "cachedResultUrl": "https://airtable.com/appeiDRdblVPZEKXC"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJwNvSXMI8VRtgW",
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://airtable.com/appeiDRdblVPZEKXC/tblJwNvSXMI8VRtgW"
+        },
+        "filterByFormula": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Filter_By_Formula', `Filter based on order_id, product_id, product_name, price, details, customization_options, color, Order status. So, the field name is order_id, product_id, product_name, price, details, customization_options, color, Order status`, 'string') }}",
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        -1904,
+        -256
+      ],
+      "id": "378225d8-008a-49a7-be2d-fdd3227288a3",
+      "name": "Orders",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YgSY9KJWYoa5HgSp",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appeiDRdblVPZEKXC",
+          "mode": "list",
+          "cachedResultName": "Adidas Customer Support",
+          "cachedResultUrl": "https://airtable.com/appeiDRdblVPZEKXC"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblb0qOp0BrHiXTFi",
+          "mode": "list",
+          "cachedResultName": "Inventory",
+          "cachedResultUrl": "https://airtable.com/appeiDRdblVPZEKXC/tblb0qOp0BrHiXTFi"
+        },
+        "filterByFormula": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Filter_By_Formula', ``, 'string') }}",
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', `Filter based on price, name, color, and details. So the field names are product_price, Name, color, details, respectively.`, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        -1776,
+        -256
+      ],
+      "id": "683dd05c-833d-4189-957c-f6b53c9086b6",
+      "name": "Product_details",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YgSY9KJWYoa5HgSp",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appeiDRdblVPZEKXC",
+          "mode": "list",
+          "cachedResultName": "Adidas Customer Support",
+          "cachedResultUrl": "https://airtable.com/appeiDRdblVPZEKXC"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblhq1gE648ztCSab",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/appeiDRdblVPZEKXC/tblhq1gE648ztCSab"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Notes": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Notes', ``, 'string') }}",
+            "Assignee": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Assignee', ``, 'string') }}",
+            "Status": "Todo",
+            "Order number": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Order_number', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Order number",
+              "displayName": "Order number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Assignee",
+              "displayName": "Assignee",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Todo",
+                  "value": "Todo"
+                },
+                {
+                  "name": "In progress",
+                  "value": "In progress"
+                },
+                {
+                  "name": "Done",
+                  "value": "Done"
+                },
+                {
+                  "name": "Status",
+                  "value": "Status"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        -256
+      ],
+      "id": "04d14e3f-b58e-4b1b-a265-661182cf9037",
+      "name": "Customer_Query",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YgSY9KJWYoa5HgSp",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"Return_Policy\": \"The Return Policy is only for 7 days.\"\n}\n",
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "data.body",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2384,
+        -480
+      ],
+      "id": "d10aae89-4922-4a81-9a46-b98011575ab7",
+      "name": "Return_Policy"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appeiDRdblVPZEKXC",
+          "mode": "list",
+          "cachedResultName": "Adidas Customer Support",
+          "cachedResultUrl": "https://airtable.com/appeiDRdblVPZEKXC"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJwNvSXMI8VRtgW",
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://airtable.com/appeiDRdblVPZEKXC/tblJwNvSXMI8VRtgW"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "product_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('product_id', ``, 'string') }}",
+            "product_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('product_name', ``, 'string') }}",
+            "price": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('price', ``, 'number') }}",
+            "details": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('details', ``, 'string') }}",
+            "customization_options": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('customization_options', ``, 'string') }}",
+            "color": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('color', ``, 'string') }}",
+            "Order Status": "Shipped",
+            "Customer Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Customer_Name', ``, 'string') }}",
+            "Order Date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Order_Date', ``, 'string') }}",
+            "order_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('order_id__using_to_match_', ``, 'string') }}",
+            "Estimated Delivery Date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Estimated_Delivery_Date', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "order_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "product_id",
+              "displayName": "product_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "product_name",
+              "displayName": "product_name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "details",
+              "displayName": "details",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customization_options",
+              "displayName": "customization_options",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "color",
+              "displayName": "color",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order Status",
+              "displayName": "Order Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pending",
+                  "value": "Pending"
+                },
+                {
+                  "name": "In Production",
+                  "value": "In Production"
+                },
+                {
+                  "name": "Shipped",
+                  "value": "Shipped"
+                },
+                {
+                  "name": "Delivered",
+                  "value": "Delivered"
+                },
+                {
+                  "name": "Cancelled",
+                  "value": "Cancelled"
+                },
+                {
+                  "name": "Order Status",
+                  "value": "Order Status"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order Date",
+              "displayName": "Order Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estimated Delivery Date",
+              "displayName": "Estimated Delivery Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Typecast', ``, 'boolean') }}"
+        }
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        -1520,
+        -256
+      ],
+      "id": "eb6d8d74-d5b4-42f8-ad90-5a695825248e",
+      "name": "Order_creation",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YgSY9KJWYoa5HgSp",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Twilio Trigger').item.json.data.from }}",
+        "sessionTTL": 5,
+        "contextWindowLength": 100
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.6,
+      "position": [
+        -2624,
+        -112
+      ],
+      "id": "b1879602-3c46-4222-8e4e-c35886486b40",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "a3Ra6QVZzjBcIqtC",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Twilio Trigger').item.json.data.from }}",
+        "contextWindowLength": 100
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -2032,
+        -256
+      ],
+      "id": "5414f35f-19af-4c11-bb54-790737fe2a05",
+      "name": "Simple Memory",
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Twilio Trigger": {
+      "main": [
+        [
+          {
+            "node": "Return_Policy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an SMS/MMS/WhatsApp message": {
+      "main": [
+        []
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product_details": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer_Query": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return_Policy": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send an SMS/MMS/WhatsApp message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order_creation": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "4fdd0818-5b71-4157-9457-b24ec4eedd8a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "acea01d5afca2adcdd02198d9ff8b3b5385761be5316e93be23b17fc44fb1a9c"
+  },
+  "id": "9Ibxn39NWe8rbRmw",
+  "tags": []
+}
